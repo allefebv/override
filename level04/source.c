@@ -2,6 +2,7 @@
 #include <sys/prctl.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
+#include <sys/wait.h>
 #include <signal.h>
 
 int main(void)
@@ -45,6 +46,7 @@ int main(void)
         //    0x0804871b <+83>:	mov    DWORD PTR [esp],0x1
         //    0x08048722 <+90>:	call   0x8048540 <prctl@plt>
 
+        // WILL NOTIFY FATHER WITH SIGTRAP IF EXECVE
         ptrace(PTRACE_TRACEME);
         //    0x08048727 <+95>:	mov    DWORD PTR [esp+0xc],0x0
         //    0x0804872f <+103>:	mov    DWORD PTR [esp+0x8],0x0
@@ -68,20 +70,21 @@ int main(void)
         {
             //    0x08048768 <+160>:	nop
 
-            //WAIT A STATE CHANDE IN THE CHILD
-            // => the child terminated;
-            // => the child was stopped by a signal; or the child was
+            //WAIT A STATE CHANGE IN THE CHILD
+            // => the child terminated,
+            // => the child was stopped by a signal,
             // => the child was resumed by a signal.
+            // => THE CHILD MAKES A SYSCALL
             wait(&wstatus);
             //    0x08048769 <+161>:	lea    eax,[esp+0x1c]
             //    0x0804876d <+165>:	mov    DWORD PTR [esp],eax
             //    0x08048770 <+168>:	call   0x80484f0 <wait@plt>
 
+            // NORMAL TERMINATION OF CHILD
+            if (__WIFEXITED(wstatus))
             //    0x08048775 <+173>:	mov    eax,DWORD PTR [esp+0x1c]
             //    0x08048779 <+177>:	mov    DWORD PTR [esp+0xa0],eax
             //    0x08048780 <+184>:	mov    eax,DWORD PTR [esp+0xa0]
-
-            if (eax == 0)
             //    0x08048787 <+191>:	and    eax,0x7f
             //    0x0804878a <+194>:	test   eax,eax
             //    0x0804878c <+196>:	je     0x80487ac <main+228>
@@ -94,13 +97,13 @@ int main(void)
                 //    0x080487b8 <+240>:	jmp    0x804881a <main+338>
             }
 
+            // TERMINATION OF CHILD BY A SIGNAL
+            if (__WIFSIGNALED(wstatus))
             //    0x0804878e <+198>:	mov    eax,DWORD PTR [esp+0x1c]
             //    0x08048792 <+202>:	mov    DWORD PTR [esp+0xa4],eax
             //    0x08048799 <+209>:	mov    eax,DWORD PTR [esp+0xa4]
             //    0x080487a0 <+216>:	and    eax,0x7f
             //    0x080487a3 <+219>:	add    eax,0x1
-
-            if (al == ?)
             //    0x080487a6 <+222>:	sar    al,1
             //    0x080487a8 <+224>:	test   al,al
             //    0x080487aa <+226>:	jle    0x80487ba <main+242>
@@ -113,6 +116,9 @@ int main(void)
                 //    0x080487b8 <+240>:	jmp    0x804881a <main+338>
             }
 
+            // OFFSET TO ORIG_EAX => USED TO GIVE THE SYSCALL CODE
+            // => 11 is execve, 0xb is 11
+            // => IF WE DO AN EXECVE SYSCALL IN CHILD, CHILD IS KILLED
             ret = ptrace(PTRACE_PEEKUSER, pid, 44);
             //    0x080487ba <+242>:	mov    DWORD PTR [esp+0xc],0x0
             //    0x080487c2 <+250>:	mov    DWORD PTR [esp+0x8],0x2c
