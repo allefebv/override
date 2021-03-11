@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 void secret_backdoor()
 {
     /* PROLOGUE */
@@ -24,7 +28,7 @@ void secret_backdoor()
     //    0x00005555555548bf <+51>:	ret
 }
 
-void set_msg(char *start_str)
+void set_msg(int limit, char *buf_addr)
 {
     /* PROLOGUE */
     //    0x0000555555554932 <+0>:	push   rbp
@@ -33,7 +37,7 @@ void set_msg(char *start_str)
     char buf[];
     //    0x0000555555554936 <+4>:	sub    rsp,0x410
 
-    bzero(buf);
+    bzero(buf, strlen(buf));
     //    0x000055555555493d <+11>:	mov    QWORD PTR [rbp-0x408],rdi
     //    0x0000555555554944 <+18>:	lea    rax,[rbp-0x400]
     //    0x000055555555494b <+25>:	mov    rsi,rax
@@ -62,7 +66,7 @@ void set_msg(char *start_str)
     //    0x000055555555499a <+104>:	mov    rdi,rax
     //    0x000055555555499d <+107>:	call   0x555555554770 <fgets@plt>
 
-    strncpy(start_str, buf, 66);
+    strncpy(buf_addr, buf, limit);
     //    0x00005555555549a2 <+112>:	mov    rax,QWORD PTR [rbp-0x408]
     //    0x00005555555549a9 <+119>:	mov    eax,DWORD PTR [rax+0xb4]
     //    0x00005555555549af <+125>:	movsxd rdx,eax
@@ -76,17 +80,16 @@ void set_msg(char *start_str)
     //    0x00005555555549cb <+153>:	leave
     //    0x00005555555549cc <+154>:	ret
 }
-void set_username()
+void set_username(char *buf)
 {
     /* PROLOGUE */
     //    0x00005555555549cd <+0>:	push   rbp
     //    0x00005555555549ce <+1>:	mov    rbp,rsp
 
-    char buf[];
-    char buf2[];
+    char username_buf[];
     //    0x00005555555549d1 <+4>:	sub    rsp,0xa0
 
-    bzero(buf);
+    bzero(username_buf);
     //    0x00005555555549d8 <+11>:	mov    QWORD PTR [rbp-0x98],rdi
     //    0x00005555555549df <+18>:	lea    rax,[rbp-0x90]
     //    0x00005555555549e6 <+25>:	mov    rsi,rax
@@ -106,7 +109,7 @@ void set_username()
     //    0x0000555555554a12 <+69>:	mov    eax,0x0
     //    0x0000555555554a17 <+74>:	call   0x555555554750 <printf@plt>
 
-    fgets(buf, 128, stdin);
+    fgets(username_buf, 128, stdin);
     //    0x0000555555554a1c <+79>:	mov    rax,QWORD PTR [rip+0x201595]        # 0x555555755fb8
     //    0x0000555555554a23 <+86>:	mov    rax,QWORD PTR [rax]
     //    0x0000555555554a26 <+89>:	mov    rdx,rax
@@ -115,7 +118,7 @@ void set_username()
     //    0x0000555555554a35 <+104>:	mov    rdi,rax
     //    0x0000555555554a38 <+107>:	call   0x555555554770 <fgets@plt>
 
-    strncpy(buf2, 40, buf);
+    strncpy(buf, 41, username_buf);
     //    0x0000555555554a3d <+112>:	mov    DWORD PTR [rbp-0x4],0x0
     //    0x0000555555554a44 <+119>:	jmp    0x555555554a6a <set_username+157>
     //    0x0000555555554a46 <+121>:	mov    eax,DWORD PTR [rbp-0x4]
@@ -134,7 +137,7 @@ void set_username()
     //    0x0000555555554a7d <+176>:	test   al,al
     //    0x0000555555554a7f <+178>:	jne    0x555555554a46 <set_username+121>
 
-    printf(">: Welcome, %s", buf2);
+    printf(">: Welcome, %s", buf);
     //    0x0000555555554a81 <+180>:	mov    rax,QWORD PTR [rbp-0x98]
     //    0x0000555555554a88 <+187>:	lea    rdx,[rax+0x8c]
     //    0x0000555555554a8f <+194>:	lea    rax,[rip+0x165]        # 0x555555554bfb
@@ -154,7 +157,7 @@ void handle_msg()
     //    0x00005555555548c0 <+0>:	push   rbp
     //    0x00005555555548c1 <+1>:	mov    rbp,rsp
 
-    char buf[];
+    char buf[41];
     //    0x00005555555548c4 <+4>:	sub    rsp,0xc0
 
     bzero(buf);
@@ -165,14 +168,16 @@ void handle_msg()
     //    0x00005555555548e7 <+39>:	mov    QWORD PTR [rax+0x10],0x0
     //    0x00005555555548ef <+47>:	mov    QWORD PTR [rax+0x18],0x0
     //    0x00005555555548f7 <+55>:	mov    QWORD PTR [rax+0x20],0x0
+
+    buf[40] = 140;
     //    0x00005555555548ff <+63>:	mov    DWORD PTR [rbp-0xc],0x8c
 
-    set_username();
+    set_username(buf);
     //    0x0000555555554906 <+70>:	lea    rax,[rbp-0xc0]
     //    0x000055555555490d <+77>:	mov    rdi,rax
     //    0x0000555555554910 <+80>:	call   0x5555555549cd <set_username>
 
-    set_msg();
+    set_msg(buf[40]);
     //    0x0000555555554915 <+85>:	lea    rax,[rbp-0xc0]
     //    0x000055555555491c <+92>:	mov    rdi,rax
     //    0x000055555555491f <+95>:	call   0x555555554932 <set_msg>

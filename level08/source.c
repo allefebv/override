@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 void log_wrapper(int fd, char *str, char *filename)
 {
     /* PROLOGUE */
