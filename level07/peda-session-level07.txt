@@ -1,6 +1,0 @@
-break main
-break *0x080486d0
-break *0x08048963
-break *0x0804866e
-break *0x804868d
-
