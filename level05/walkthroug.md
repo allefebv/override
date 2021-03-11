@@ -10,14 +10,14 @@
 
 ### EXPLOIT STRATEGY
 
-- Overwrite GOT addresses of exit by SHELLCODE (which may be alterate by strtolower())
-  - GOT of exit : 0x80497e0
-  - => create an env variable which contains the SHELLCODE
-  - => find the env variable address (we found an utilitary written in C to do this)
-  - => as the address is 0xffffdfc2, necessary padding for the %n exploit would be 4294959042
-    - => we split it in two 2bytes parts, writing them at 0x80497e0 and 0x80497e2
-      - => 0xffff => 0x80497e2
-      - => 0xdfc2 => 0x80497e0
+- GOT of exit : 0x80497e0
+- => create an env variable which contains the SHELLCODE
+- => find the env variable address (we found an utilitary written in C to do this)
+- => as the address is 0xffffdfc2, necessary padding for the %n exploit would be 4294959042
+  - => we split it in two 2bytes parts, writing them at 0x80497e0 and 0x80497e2
+    - => 0xffff => 0x80497e2
+    - => 0xdfc2 => 0x80497e0
+  - => We overwrite the address of exit in the GOT table {0x8048370} by the address of the SHELLCODE env variable {0xffffdfc2} with 'n' identifier of printf
 
 ### RUN COMMAND
 
