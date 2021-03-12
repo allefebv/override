@@ -9,9 +9,10 @@
   - this username is stored in a data section buffer and compared to string "dat_wil"
 - if username is "dat_wil", user is then prompted for a password.
   - this password is stored on stack and we can overflow main sEIP
-    - => fgets copies up to 100 bytes from esp + 1c<sub>16</sub> (28<sub>10</sub>)
-      => offset of 128 bytes from esp
-    - sEIP is located on esp + 108-112, we control this stack area
+    - => fgets copies up to 100 bytes from [ESP + 1c<sub>16</sub>] (28<sub>10</sub>)
+      - => we can write up to [ESP + 128]
+    - sEIP is located at [ESP + 108]
+      - => We can control sEIP
 
 ### EXPLOIT STRATEGY
 

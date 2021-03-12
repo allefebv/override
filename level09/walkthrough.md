@@ -4,24 +4,24 @@
 
 ### BINARY BEHAVIOR
 
-- programm run and ask a username and a message that is send to @Unix-Dude
+- programm asks a username and a message that is send to @Unix-Dude
 - function main, set_msg, set_username, handle_msg and secret_backdoor
-- set_username
 
-- function handle_msg :
+- function `handle_msg` :
 
   - sets value at address 0x7fffffffdc74 to 0x8c<sub>16</sub> (140<sub>10</sub>)
     - => will be used as set_msg strncpy limit
 
-- function set_username :
+- function `set_username` :
 
   - copies at most 41 bytes on the stack, the 41th exactly at address 0x7fffffffdc74
+    - => (set_msg strncpy limit)
 
-- function set_msg :
+- function `set_msg` :
 
-  - gets 1024 bytes from stdin into `buf_a`
-  - copies N first bytes from `buf_a` to top of handle_msg stack frame (ESP pointer)
-  - sEIP is 200 bytes after ESP
+  - gets at most 1024 bytes from stdin into `buf_a`
+  - copies `N` first bytes from `buf_a` to top of handle_msg stack frame (ESP pointer)
+  - sEIP handle_msg is 200 bytes after ESP handle_msg
 
 - function `secret backdoor` :
   - reads on stdin into `buf_b`

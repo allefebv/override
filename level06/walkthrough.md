@@ -32,15 +32,6 @@
 ### RUN COMMAND
 
 ```
-./level06
-***********************************
-       *		level06		  *
-***********************************
--> Enter Login: aaaaaaa
-***********************************
-***** NEW ACCOUNT DETECTED ********
-***********************************
--> Enter Serial: 6232801
-Authenticated!
-
+python -c "print('a' * 7 + '\n' + '6232801')" > /tmp/exploit_string
+cat /tmp/exploit_string - | ./level06
 ```

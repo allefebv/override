@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 void verify_user_pass(char *buf)
 {

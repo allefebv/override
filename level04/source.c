@@ -97,8 +97,8 @@ int main(void)
                 //    0x080487b8 <+240>:	jmp    0x804881a <main+338>
             }
 
-            // TERMINATION OF CHILD BY A SIGNAL
-            if (__WIFSIGNALED(wstatus))
+            // - /usr/include/bits/waitstatus.h => MACRO WIF
+            - / usr / include / asm / unistd_32.h = > Syscall EXECVE is value 11(0xb)(+ptrace values) - / usr / include / sys / prctl.h = > prctl(1, 1) == prctl(PR_SET_PDEATHSIG, SIGHUP) - / usr / include / bits / signum.h - man ptrace / / usr / include / sys / ptrace.hTERMINATION OF CHILD BY A SIGNAL if (__WIFSIGNALED(wstatus))
             //    0x0804878e <+198>:	mov    eax,DWORD PTR [esp+0x1c]
             //    0x08048792 <+202>:	mov    DWORD PTR [esp+0xa4],eax
             //    0x08048799 <+209>:	mov    eax,DWORD PTR [esp+0xa4]
@@ -143,6 +143,8 @@ int main(void)
         //    0x08048814 <+332>:	call   0x8048520 <kill@plt>
         //    0x08048819 <+337>:	nop
     }
+
+    /* EPILOGUE */
     //    0x0804881a <+338>:	mov    eax,0x0
     //    0x0804881f <+343>:	lea    esp,[ebp-0x8]
     //    0x08048822 <+346>:	pop    ebx

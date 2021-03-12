@@ -5,15 +5,15 @@
 ### BINARY BEHAVIOR
 
 - fgets stdin into stack buffer
-- modify buffer with strtolower on buffer
-- printf(buff) format string exploit
+- modify buffer with `strtolower` on buffer
+- printf(buff) => format string exploit
 
 ### EXPLOIT STRATEGY
 
-- GOT of exit : 0x80497e0
+- GOT entry of exit : 0x80497e0
 - => create an env variable which contains the SHELLCODE
 - => find the env variable address (we found an utilitary written in C to do this)
-- => as the address is 0xffffdfc2, necessary padding for the %n exploit would be 4294959042
+- => as the shellcode address is 0xffffdfc2, necessary padding for the %n exploit would be 4294959042
   - => we split it in two 2bytes parts, writing them at 0x80497e0 and 0x80497e2
     - => 0xffff => 0x80497e2
     - => 0xdfc2 => 0x80497e0

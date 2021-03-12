@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 void log_wrapper(int fd, char *str, char *filename)
 {

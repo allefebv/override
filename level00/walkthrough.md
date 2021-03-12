@@ -16,5 +16,6 @@
 ### RUN COMMAND
 
 ```
-./level00 5276
+echo 5276 > /tmp/exploit_string
+cat /tmp/exploit_string - | ./level00
 ```
